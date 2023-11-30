@@ -1,6 +1,7 @@
-from flask import Blueprint, redirect, render_template
+from flask import Blueprint, redirect, render_template, url_for
 import os
 import psycopg2
+from datetime import datetime, timedelta
 from .forms import AppointmentForm
 
 bp = Blueprint("main", __name__, url_prefix="/")
@@ -12,10 +13,15 @@ CONNECTION_PARAMETERS = {
     "host": os.environ.get("DB_HOST")
 }
 
-@bp.route("/", methods=["GET", "POST"])
+@bp.route("/")
 def main():
-    form = AppointmentForm()
+    d = datetime.now()
+    return redirect(url_for(".daily", year=d.year, month=d.month, day=d.day))
 
+
+@bp.route("/<int:year>/<int:month>/<int:day>", methods=["GET","POST"])
+def daily(year, month, day):
+    form = AppointmentForm()
     if form.validate_on_submit():
         data = form.get_form_data()
         with psycopg2.connect(**CONNECTION_PARAMETERS) as conn:
@@ -30,11 +36,14 @@ def main():
 
     with psycopg2.connect(**CONNECTION_PARAMETERS) as conn:
         with conn.cursor() as curs:
+            d = datetime(year, month, day)
+            next_day = d + timedelta(days=1)
             query = """
                 SELECT id, name, start_datetime, end_datetime
                 FROM appointments
+                WHERE start_datetime BETWEEN (%s) AND (%s)
                 ORDER BY start_datetime;
             """
-            curs.execute(query)
+            curs.execute(query, (d, next_day))
             rows = curs.fetchall()
     return render_template("main.html", rows=rows, form=form)
