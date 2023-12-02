@@ -26,6 +26,17 @@
             <p>{{ form.private.label }} {{ form.private() }}</p>
             <p>{{ form.submit() }}</p>
         </form>
+        <form
+          style="margin: 30px 0px; padding: 10px; border: 1.5px solid black; width: fit-content;"
+          onsubmit="handleDateSelction(event)"
+        >
+            <p>Please choose a date:</p>
+            <div style="margin: 10px 0;">
+                <label for="date">Date</label>
+                <input id="date" type="date">
+            </div>
+            <button type="submit"> Submit </button>
+        </form>
         <table>
             <thead>
                 <tr>
@@ -45,4 +56,12 @@
             </tbody>
         </table>
     </body>
+    <script>
+        function handleDateSelction(e) {
+            e.preventDefault();
+            const dateValue = document.getElementById("date").value;
+            const path = '/' + dateValue.replaceAll("-", "/");
+            document.location.assign(path);
+        }
+    </script>
 </html>
